@@ -4,7 +4,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name='cython2skeleton',
+    name='Cython2Skeleton',
     version='0.1.0',
     url='https://github.com/steffen-sanwald/cython2skeleton.git',
     author='Steffen Sanwald',
