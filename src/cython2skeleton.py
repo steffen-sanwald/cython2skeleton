@@ -92,6 +92,7 @@ class Cython2Skeleton:
         self._comments = None
         self._shared_libs = None
         self._py_files = None
+        self._arbitrary_strings = None
 
     def _get_strings_from_file(self, min_chars: int = 5, only_interesting: bool = True) -> list[str]:
         """
@@ -145,7 +146,6 @@ class Cython2Skeleton:
         for symbol in symbol_candidates:
             if not any([symbol in other_symbol for other_symbol in symbol_candidates if other_symbol != symbol]):
                 unique_symbol_candidates.append(symbol)
-        print(unique_symbol_candidates)
         return unique_symbol_candidates
 
     def _create_symbol_tree(self, in_strings: list[str]) -> dict[str:any]:
@@ -220,7 +220,7 @@ class Cython2Skeleton:
 
         return root
 
-    def run(self):
+    def process(self):
         """
         Execute the different steps of the reconstruction process
         1.) get all strings from the file
@@ -230,6 +230,7 @@ class Cython2Skeleton:
         5.) assign entities to the tree
         """
         strings = self._get_strings_from_file()
+        self._arbitrary_strings = strings
         self._comments = self._get_comments(strings)
         candidates = self._get_python_symbolpaths(strings)
         symbol_tree = self._create_symbol_tree(candidates)
@@ -255,9 +256,14 @@ class Cython2Skeleton:
         for child in node.children:
             self._print_tree(child, level + 1, file, print_unknown)
 
-    def persist_pseudo_skeleton(self, target_filepath: str, print_unknown: bool = False):
+    def persist_pseudo_skeleton(self, target_filepath: str, print_unknown: bool = False,
+                                store_all_strings: bool = False):
         """
         Persist the pseudo skeleton to a file
+        :param target_filepath: the path to the target file
+        :param print_unknown: print unknown nodes
+        :param store_all_strings: store all strings in the skeleton file,
+            not only the ones that are related to a python entity type
         """
         with open(target_filepath, "w") as f:
             f.write(f"Extracted info for cython file {self._filepath}:\n\n")
@@ -269,6 +275,21 @@ class Cython2Skeleton:
             f.write("\n".join(self._shared_libs))
             f.write("\n\n--------------\nPY_FILES:\n\n")
             f.write("\n".join(self._py_files))
+            if store_all_strings:
+                f.write("\n\n--------------\nARBITRARY_STRINGS:\n\n")
+                f.write("\n".join(self._arbitrary_strings))
+
+    def run_and_store(self, target_filepath: str, print_unknown: bool = False,
+                      store_all_strings: bool = False):
+        """
+        Run the process and store the pseudo skeleton to a file
+        :param target_filepath: the path to the target file
+        :param print_unknown: print unknown nodes
+        :param store_all_strings: store all strings in the skeleton file,
+            not only the ones that are related to a python entity type
+        """
+        self.process()
+        self.persist_pseudo_skeleton(target_filepath, print_unknown, store_all_strings)
 
 
 if __name__ == "__main__":

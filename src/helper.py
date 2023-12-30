@@ -8,7 +8,7 @@ from src.cython2skeleton import Cython2Skeleton
 
 
 def traverse_through_directroy(src_dir: str, target_dir: Optional[str] = None, print_unknown: bool = True,
-                               searched_file_extensions: Optional[str] = None):
+                               searched_file_extensions: Optional[str] = None, store_all_strings: bool = False):
     """
     Traverses through a directory and retrieves as many info about the orig python from
     the compiled cython files as possible
@@ -18,6 +18,7 @@ def traverse_through_directroy(src_dir: str, target_dir: Optional[str] = None, p
         If None, the files will be stored in the same directory as the original file, with the extension .skel
     :param print_unknown: print strings that could be from python but are not mapped to a python entity type
     :param searched_file_extensions: comma separated list of filenames to filter for e.g. ".so,.elf"
+    :param store_all_strings: store all strings in the skeleton file, not only the ones that are related to a python entity type
     :return:
     """
     for root, dirs, files in os.walk(src_dir):
@@ -30,8 +31,8 @@ def traverse_through_directroy(src_dir: str, target_dir: Optional[str] = None, p
             if filename.endswith(".skel"):
                 continue
             print(os.path.join(root, filename))
-            decompiler = Cython2Skeleton(os.path.join(root, filename))
-            decompiler.run()
+            c2s = Cython2Skeleton(os.path.join(root, filename))
+            c2s.process()
             if target_dir:
                 target_dir = pathlib.Path(target_dir)
                 orig_path = pathlib.Path(os.path.join(root, filename))
@@ -42,7 +43,8 @@ def traverse_through_directroy(src_dir: str, target_dir: Optional[str] = None, p
             else:
                 target_filepath = os.path.join(root, filename) + ".skel"
 
-            decompiler.persist_pseudo_skeleton(target_filepath, print_unknown=print_unknown)
+            c2s.persist_pseudo_skeleton(target_filepath, print_unknown=print_unknown,
+                                        store_all_strings=store_all_strings)
 
 
 if __name__ == "__main__":
