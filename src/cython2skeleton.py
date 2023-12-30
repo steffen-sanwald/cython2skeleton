@@ -44,7 +44,6 @@ class PythonEntity:
     def __str__(self):
         return f"{self.type.name}: {self.name}"
 
-
     def __eq__(self, other):
         if isinstance(other, PythonEntity):
             return self.name == other.name and self.type == other.type
@@ -85,9 +84,14 @@ class Cython2Skeleton:
     COMMENT_KEYWORDS = [":param", ":return", "@param", "@return"]
 
     def __init__(self, filepath: str):
+        """
+        :param filepath: the path to the cython compiled file
+        """
         self._filepath = filepath
         self._skeleton = None
         self._comments = None
+        self._shared_libs = None
+        self._py_files = None
 
     def _get_strings_from_file(self, min_chars: int = 5, only_interesting: bool = True) -> list[str]:
         """
@@ -106,7 +110,11 @@ class Cython2Skeleton:
             return result
 
     def _get_comments(self, in_strings: list[str]) -> list[str]:
-        # get all strings that contain COMMENT_KEYWORDS
+        """
+        Get all comments from the file that contain COMMENT_KEYWORDS
+        :param in_strings:
+        :return:
+        """
         return list(filter(lambda x: any([keyword in x.lower() for keyword in self.COMMENT_KEYWORDS]), in_strings))
 
     def _get_python_symbolpaths(self, in_strings: list[str]):
@@ -145,6 +153,8 @@ class Cython2Skeleton:
         Create a tree of strings
         Each node is a string
         Each node has a parent and children
+        :param in_strings: the list of strings
+        :return: the tree of strings
         """
         tree = {}
         for item in in_strings:
@@ -155,6 +165,11 @@ class Cython2Skeleton:
         return tree
 
     def _determine_type(self, key):
+        """
+        Determine the type of the current entity
+        :param key: the name of the entity
+        :return: the type of the entity
+        """
         # if 'manager' in key:
         #    return PythonEntityType.CLASS
         if '__init__' in key or '__new__' in key:
@@ -165,6 +180,8 @@ class Cython2Skeleton:
     def _assign_entities_to_tree(self, symbol_tree) -> PythonEntity:
         """
         Assign entities to the tree
+        :param symbol_tree: the tree of symbol paths
+        :return: the root node of the tree
         """
 
         # 1.) convert to python entities
@@ -217,6 +234,9 @@ class Cython2Skeleton:
         candidates = self._get_python_symbolpaths(strings)
         symbol_tree = self._create_symbol_tree(candidates)
         self._skeleton = self._assign_entities_to_tree(symbol_tree)
+        # filter for strings that contain ".so"
+        self._shared_libs = list(filter(lambda x: x.endswith(".so") or ".so." in x, strings))
+        self._py_files = list(filter(lambda x: x.endswith(".py") or x.endswith(".pyx"), strings))
 
     def _print_tree(self, node, level, file, print_unknown: bool = False):
         """
@@ -240,10 +260,15 @@ class Cython2Skeleton:
         Persist the pseudo skeleton to a file
         """
         with open(target_filepath, "w") as f:
-            f.write(f"RECONSTRUCTED_SKELETON for file {self._filepath}:\n\n")
+            f.write(f"Extracted info for cython file {self._filepath}:\n\n")
+            f.write("\n\n--------------\nSKELETON:\n\n")
             self._print_tree(self._skeleton, 0, f, print_unknown)
-            f.write("\n\nCOMMENTS:\n\n")
+            f.write("\n\n--------------\nCOMMENTS:\n\n")
             f.write("\n".join(self._comments))
+            f.write("\n\n--------------\nSHARED_LIBS:\n\n")
+            f.write("\n".join(self._shared_libs))
+            f.write("\n\n--------------\nPY_FILES:\n\n")
+            f.write("\n".join(self._py_files))
 
 
 if __name__ == "__main__":
