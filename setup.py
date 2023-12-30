@@ -8,8 +8,7 @@ setup(
     version='0.1.0',
     url='https://github.com/steffen-sanwald/cython2skeleton.git',
     author='Steffen Sanwald',
-    author_email='author@gmail.com',
     description='Quickly gather highlevel insights into cython compiled executable/shared library.',
     packages=find_packages(),
-    install_requires=['fire', 'binary2strings'],
+    install_requires=['pybind11', 'fire', 'binary2strings'],
 )
