@@ -12,5 +12,5 @@ python cython2skeleton.py --filepath=/tmp/api.so run
 
 To run the script over a directory recursively:
 ```bash
-python helper.py --src_dir=/tmp/target_dir --target_dir=/tmp/target_dir_binaries --print_unknown=True --searched_file_extensions=so,elf
+python helper.py --src_dir=/tmp/src_dir --target_dir=/tmp/target_dir --print_unknown=True --searched_file_extensions=so,elf
 ```
