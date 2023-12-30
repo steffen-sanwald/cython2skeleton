@@ -45,6 +45,32 @@ class PythonEntity:
         return f"{self.type.name}: {self.name}"
 
 
+    def __eq__(self, other):
+        if isinstance(other, PythonEntity):
+            return self.name == other.name and self.type == other.type
+        return False
+
+    def __gt__(self, other):
+        if isinstance(other, PythonEntity):
+            return self.name > other.name
+        return False
+
+    def __lt__(self, other):
+        if isinstance(other, PythonEntity):
+            return self.name < other.name
+        return False
+
+    def __ge__(self, other):
+        if isinstance(other, PythonEntity):
+            return self.name >= other.name
+        return False
+
+    def __le__(self, other):
+        if isinstance(other, PythonEntity):
+            return self.name <= other.name
+        return False
+
+
 class Cython2Skeleton:
     """
     Takes a cython compiled file (.elf, .so) as input and reconstructs the original class and function names
@@ -173,6 +199,7 @@ class Cython2Skeleton:
                 # assign all children the type of PythonEntityType.METHOD
                 for child in parent_entity.children:
                     child.type = PythonEntityType.METHOD
+            parent_entity.children.sort()
 
         return root
 
@@ -191,7 +218,7 @@ class Cython2Skeleton:
         symbol_tree = self._create_symbol_tree(candidates)
         self._skeleton = self._assign_entities_to_tree(symbol_tree)
 
-    def _print_tree(self, node, level, file):
+    def _print_tree(self, node, level, file, print_unknown: bool = False):
         """
         print the current level and call function recursively for all children
         :param node:
@@ -200,19 +227,21 @@ class Cython2Skeleton:
         :return:
         """
         indent = '--' * level
-        if node.type == PythonEntityType.UNKNOWN:
-            return  # don't print unknown nodes
+        if not print_unknown:
+            if node.type == PythonEntityType.UNKNOWN:
+                return  # don't print unknown nodes
+
         file.write(f'{indent}{node.name} - Type: {node.type.name}\n')
         for child in node.children:
-            self._print_tree(child, level + 1, file)
+            self._print_tree(child, level + 1, file, print_unknown)
 
-    def persist_pseudo_skeleton(self, target_filepath: str):
+    def persist_pseudo_skeleton(self, target_filepath: str, print_unknown: bool = False):
         """
         Persist the pseudo skeleton to a file
         """
         with open(target_filepath, "w") as f:
             f.write(f"RECONSTRUCTED_SKELETON for file {self._filepath}:\n\n")
-            self._print_tree(self._skeleton, 0, f)
+            self._print_tree(self._skeleton, 0, f, print_unknown)
             f.write("\n\nCOMMENTS:\n\n")
             f.write("\n".join(self._comments))
 
