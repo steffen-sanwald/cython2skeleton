@@ -10,5 +10,5 @@ setup(
     author='Steffen Sanwald',
     description='Quickly gather highlevel insights into cython compiled executable/shared library.',
     packages=find_packages(),
-    install_requires=['pybind11', 'fire', 'binary2strings'],
+    install_requires=['fire', 'binary2strings'],
 )
