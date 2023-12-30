@@ -8,7 +8,9 @@ from src.cython2skeleton import Cython2Skeleton
 
 
 def traverse_through_directroy(src_dir: str, target_dir: Optional[str] = None, print_unknown: bool = True,
-                               searched_file_extensions: Optional[str] = None, store_all_strings: bool = False):
+                               searched_file_extensions: Optional[str] = None, store_all_strings: bool = False,
+                                only_interesting: bool = False, min_chars: int = 5
+                               ):
     """
     Traverses through a directory and retrieves as many info about the orig python from
     the compiled cython files as possible
@@ -19,6 +21,8 @@ def traverse_through_directroy(src_dir: str, target_dir: Optional[str] = None, p
     :param print_unknown: print strings that could be from python but are not mapped to a python entity type
     :param searched_file_extensions: comma separated list of filenames to filter for e.g. ".so,.elf"
     :param store_all_strings: store all strings in the skeleton file, not only the ones that are related to a python entity type
+    :param only_interesting: only strings that are considered interesting by binary2strings are processed
+    :param min_chars: only store strings that are longer than min_chars
     :return:
     """
     for root, dirs, files in os.walk(src_dir):
@@ -31,7 +35,7 @@ def traverse_through_directroy(src_dir: str, target_dir: Optional[str] = None, p
             if filename.endswith(".skel"):
                 continue
             print(os.path.join(root, filename))
-            c2s = Cython2Skeleton(os.path.join(root, filename))
+            c2s = Cython2Skeleton(os.path.join(root, filename), only_interesting=only_interesting, min_chars=min_chars)
             c2s.process()
             if target_dir:
                 target_dir = pathlib.Path(target_dir)

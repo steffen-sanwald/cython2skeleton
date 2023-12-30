@@ -14,3 +14,6 @@ To run the script over a directory recursively:
 ```bash
 python src/helper.py --src_dir=/tmp/src_dir --target_dir=/tmp/target_dir --searched_file_extensions=so,elf --print_unknown=True  --store_all_strings=False
 ```
+
+If to many irrelevant strings are printed, the parameters only_interesting: bool and min_chars: int can be used to 
+adjust the results.

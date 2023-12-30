@@ -83,8 +83,10 @@ class Cython2Skeleton:
 
     COMMENT_KEYWORDS = [":param", ":return", "@param", "@return"]
 
-    def __init__(self, filepath: str):
+    def __init__(self, filepath: str, only_interesting: bool = False, min_chars: int = 5):
         """
+        :param min_chars: the minimum number of characters a string must have to be considered
+        :param only_interesting: only strings that are considered interesting by binary2strings are processed
         :param filepath: the path to the cython compiled file
         """
         self._filepath = filepath
@@ -93,15 +95,17 @@ class Cython2Skeleton:
         self._shared_libs = None
         self._py_files = None
         self._arbitrary_strings = None
+        self._only_interesting = only_interesting
+        self._min_chars = min_chars
 
-    def _get_strings_from_file(self, min_chars: int = 5, only_interesting: bool = True) -> list[str]:
+    def _get_strings_from_file(self) -> list[str]:
         """
         Get all strings from the file using python's binary2strings library
         """
         with open(self._filepath, "rb") as f:
             buffer = f.read()
             # [(string, encoding, span, is_interesting), ] \
-            result = b2s.extract_all_strings(buffer, min_chars=min_chars, only_interesting=False)
+            result = b2s.extract_all_strings(buffer, min_chars=self._min_chars, only_interesting=self._only_interesting)
             # only keep the strings from the result list using map
             result = list(map(lambda x: x[0], result))
             # remove duplicates
@@ -231,6 +235,9 @@ class Cython2Skeleton:
         """
         strings = self._get_strings_from_file()
         self._arbitrary_strings = strings
+        self._arbitrary_strings.sort()
+        # strip all self._arbitrary_strings
+        self._arbitrary_strings = list(map(lambda x: x.strip(), self._arbitrary_strings))
         self._comments = self._get_comments(strings)
         candidates = self._get_python_symbolpaths(strings)
         symbol_tree = self._create_symbol_tree(candidates)
